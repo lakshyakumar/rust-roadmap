@@ -1,0 +1,100 @@
+1. How can you take a Vec<i32> and return a Vec<i32> containing only the squares of the even numbers, using iterators (iter, filter, map, collect) without using loops?.
+2. Lifetimes: fn longer<'a>(a: &'a str, b: &'a str) -> &'a str explicitly annotated (no elision).
+3. From/Into + Newtype: Newtype UserId(u64). Implement From<u64> and Into<u64>; demonstrate (42u64).into().
+4. Trait + Default + Builder-like pattern: Config with optional fields; implement Default; chain setters returning Self.
+5. Result + ? + thiserror: read_config(path) -> Result<Config, ConfigError>; define custom error with thiserror.
+6. Iterator adapters: Compute moving average over Vec<f64> using windows and map; return Vec<f64>.
+7. Enum + match + if let: Shape enum; area() method; use matches! macro to count only Circles in slice.
+8. HashMap combinators: Word frequency for &str using split_whitespace and entry().or_insert(0) += 1.
+9. Iterator::fold: factorial(n) using (1..=n).fold(1, |acc, x| acc * x).
+10. Borrowing APIs: fn middle<T>(slice: &[T]) -> Option<&T>; no bounds; test with strings and ints.
+11. Generic constraints: fn print_both<T: std::fmt::Display + std::fmt::Debug>(t: &T) formatted output.
+12. Associated types: trait Storage { type Key; type Value; fn get(&self, &Self::Key) -> Option<&Self::Value>; } implement for HashMapStorage.
+13. PhantomData: TypedId<T>(u64, PhantomData<T>) demonstrating distinct UserId/ProductId types not intermixable.
+14. Operator overloading: impl Add for Point { type Output=Point; } enabling p1 + p2.
+15. Drop order + RAII: TempDir that creates a temp folder in new() and removes in Drop; test drop order with prints.
+16. Rc<RefCell<T>> tree: Build a Node with children; implement add_child that updates parent via Weak.
+17. Deref + DerefMut: MyBox<T> wrapper that logs deref and deref_mut accesses.
+18. Custom Iterator: Counter with new(start, step) yielding successive values and implementing Iterator for u64.
+19. Iterator chaining: Flatten a Vec<Vec<i32>> with into_iter().flatten().filter().collect().
+20. Pattern matching ergonomics: match on &Option<String> to avoid cloning; use ref/ref mut bindings.
+21. mpsc channels: Producer/consumer with bounded channel (sync_channel); spawn threads; graceful shutdown with drop(sender).
+22. Arc<Mutex<_>>: Shared counter incremented by 8 threads; use thread::scope to avoid 'static bounds.
+23. RwLock: Read-mostly cache with RwLock<HashMap<K,V>>; measure lock time with Instant; explain contention.
+24. Crossbeam scoped threads: Parallel map over slice using scoped threads; compare to Rayon for large data.
+25. Rayon parallel iterators: Parallel sum and histogram; ensure no data races via reduce_with.
+26. Tokio basics: #[tokio::main] async fn main(); fetch two URLs concurrently with join!.
+27. Async timeout + cancel: Use tokio::time::timeout for request; handle Elapsed; cancel background task with drop(handle).
+28. Async channels: tokio::sync::mpsc bounded channel with backpressure; producers await send().
+29. Async stream: Use tokio_stream::wrappers::ReceiverStream to expose mpsc as Stream; consume with while let Some(x).
+30. tokio::select!: Race a TCP read vs timeout; handle whichever completes first.
+31. Async file I/O: Use tokio::fs to read large file and compute SHA-256 incrementally (tokio::io::BufReader).
+32. Backoff + retries: Implement retry(f, attempts, base_delay) with exponential backoff and jitter.
+33. Async trait objects (async-trait): Define Repository trait with async fn get(id)->Result<Item>; implement for HttpRepo.
+34. Axum minimal API: GET /health returns 200; POST /items accepts JSON, returns created; include extractors and State.
+35. Serde tricks: Define enum with internally tagged representation; serialize/deserialize sample JSON.
+36. thiserror + anyhow: Library returns precise errors (thiserror); binary uses anyhow with context to bubble up.
+37. tracing: Add spans and instrumentation to async handlers; include span fields; use tracing-subscriber fmt layer.
+38. Feature flags: Cargo.toml features = ["json", "yaml"]; compile-time control parse_config() for JSON or YAML via cfg.
+39. Workspaces: Create Cargo workspace with lib crate and bin crate using the lib; demonstrate path dependency.
+40. Iterator adapters via itertools: Use group_by to group consecutive equal items; avoid manual state.
+41. Proc-macro derive (skeleton): Create a proc-macro crate with derive(Builder) generating builder for a struct (outline).
+42. Declarative macro TT-muncher: hashmap! { k => v, ... } builds HashMap; support trailing commas.
+43. Macro hygiene: write a log_expr! macro that evaluates expression once and logs value, using let bindings for hygeine.
+44. const fn + const generics: FixedMatrix<T, const N: usize>; implement identity() as const fn when T: Default + One.
+45. Zero-cost newtype for units: Meters(f64), Seconds(f64); implement Div to yield Speed; prevent mixing with PhantomData marker.
+46. Typestate pattern: HttpRequestBuilder that prevents send() until url and method set; encode via generic type params.
+47. Sealed trait pattern: Create a trait in a module with private Sealed to prevent external impls; explain rationale.
+48. HRTB (higher-ranked trait bounds): fn apply<'a, F>(f: F) where F: for<'b> Fn(&'b str) -> &'b str; demonstrate use.
+49. GATs (generic associated types): Define StreamingIterator with type Item<'a>; implement for a struct over a buffer.
+50. Variance exploration: Create PhantomData invariance/covariance examples; show why &T is covariant and Cell<T> invariant.
+51. Auto traits Send/Sync: Build a type that is !Send due to raw pointer; fix by wrapping in Arc<Mutex<>>; explain results.
+52. Any + downcast: Heterogeneous Vec<Box<dyn Any>>; push different types; downcast_ref to retrieve by type.
+53. unsafe basics: Create and deref raw pointers; demonstrate UB risks and correct usage within unsafe block.
+54. FFI (call C from Rust): Extern "C" declaration to call puts from libc; link and call safely.
+55. FFI (call Rust from C): Declare #[no_mangle] extern "C" fn add(a: i32,b: i32)->i32; build staticlib and show C snippet.
+56. Unsafe: write a safe wrapper for a C function that returns a pointer/len; ensure lifetime correctness.
+57. Pinning: Self-referential struct using Pin<Box<T>> with a field holding a pointer into itself; explain why Pin is needed.
+58. Uninitialized memory: Use MaybeUninit<[u8; 1024]> to fill buffer from read; avoid UB; then assume_init().
+59. Atomics: Lock-free concurrent counter with AtomicU64 using fetch_add; discuss memory ordering SeqCst vs Relaxed.
+60. Lock-free stack (treiber): Implement single-producer single-consumer stack with AtomicPtr; ensure safe Drop on pop().
+61. parking_lot: Replace std::sync locks with parking_lot; benchmark difference using criterion.
+62. criterion benchmarking: Benchmark naive vs iter::fold factorial; output report; avoid --release illusions.
+63. proptest: Property-based tests for a reversible encode/decode pair; shrink failing cases.
+64. QuickCheck-style laws: Verify Monoid laws for a custom type (combine/empty) with property tests.
+65. Serialization formats: Serialize struct to JSON, YAML, CBOR; compare sizes; add serde(default) for missing fields.
+66. Filesystem walking: Use walkdir to compute blake3 hashes of files concurrently; show first 8 hex chars.
+67. Streaming I/O: Read stdin line-by-line with BufRead::lines; transform and write to stdout efficiently.
+68. Memory profiling mindset: Use mem::size_of::<T>() and size_of_val for nested structs; explain padding/align.
+69. SmallVec/ArrayVec: Implement function that collects small results without heap alloc for <= N items using SmallVec.
+70. LRU cache: Build LRU with HashMap + doubly linked list (Rc<RefCell<Node>> or raw pointers with unsafe for perf).
+71. Ring buffer: Fixed-capacity MPMC ring buffer using atomics; fall back to Mutex if stuck.
+72. Custom allocator (outline): Implement GlobalAlloc for a bump allocator in a toy no_std example (doc-only if needed).
+73. no_std (outline): Build a crate #![no_std]; use core only; expose a function usable in embedded; unit test with std cfg.
+74. Embedded-style types: Fixed-point decimal type using i64 backing; implement Add/Sub/Mul/Div with scaling.
+75. WASM: Build a tiny wasm_bindgen function that reverses a string; include JS glue usage comments.
+76. SIMD: Use std::arch to sum f32 slices with SSE/AVX when available, fallback scalar; cfg(target_feature).
+77. State machine enum: Implement non-blocking parser with enum State and advance(&mut self, byte) -> Option<Token>.
+78. Encoding: Implement Base64 encoder/decoder with iterator adapters; test against base64 crate for correctness.
+79. Regex engine (mini): Write a simple glob matcher supporting '*' and '?' using DP; no regex crate.
+80. HTTP client with reqwest: Download file with streaming body; show progress using bytes read and length().
+81. Async cancellation tokens: Use tokio_util::sync::CancellationToken to cancel a long-running task on Ctrl+C.
+82. Backpressure: Build bounded async queue; producers await; consumers slow; measure queue depth over time.
+83. Actor model (toy): Single-threaded executor with mailbox per actor; implement ping-pong messages.
+84. Thread pool: Implement a basic work-stealing thread pool using crossbeam-deque; run tasks with futures::executor::block_on via spawn_blocking equivalent.
+85. Mini-redis: Implement RESP parsing and a subset of commands (PING/GET/SET) over TCP; handle concurrency.
+86. CLI UX: Build a CLI with clap deriving Args/Subcommand; add --verbose to change tracing level.
+87. Config layering: Load config from default -> file -> env -> CLI args; merge with precedence; serde + envy + clap.
+88. JWT auth: Implement HS256 JWT sign/verify for a minimal web API; manage exp/iat/nbf claims.
+89. Database: Use sqlx to connect to Postgres; run a migration; implement CRUD for a Todo model with transactions.
+90. Transactions + retries: Use SERIALIZABLE isolation and automatic retry on serialization failure.
+91. Caching: Add Redis caching layer with ttl; cache stampede mitigation with random jitter.
+92. Observability: tracing + metrics (prometheus exporter); instrument HTTP handlers and database calls.
+93. Test pyramid: Unit tests for pure logic; integration tests for HTTP endpoints (reqwest); use testcontainers for Postgres.
+94. Fuzzing: cargo fuzz on your parser; fix at least one discovered panic/UB; add regression test.
+95. Security: Use constant-time equality for secrets; forbid unsafe in crate (except specific modules); audit dependencies.
+96. Panics to errors: Convert panicking code to Result; use std::panic::catch_unwind where appropriate; document invariants.
+97. Error taxonomy: Create domain-specific error enum with display messages and source chaining; map to HTTP status codes.
+98. Docs + examples: Write rustdoc for public APIs; add doctests that compile and run; include examples/ crate.
+99. Publishing: Prepare Cargo.toml metadata, license, README, categories/keywords; dry-run publish; explain semver strategy.
+100. Performance profile (outline): Use flamegraph or pprof-rs to profile hot paths; optimize allocations and copies.
