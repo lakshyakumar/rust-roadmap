@@ -1,6 +1,8 @@
 // The Problem with Standard thread::spawn
 //the spawned thread might outlive the function it was created in
 
+// cross beam create a container for scope, guarantee that the thread will return before cross beam scope ends.
+
 use crossbeam::thread;
 
 // fn wont_compile() {
