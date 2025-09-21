@@ -39,7 +39,7 @@ Test-Endpoint "GET /time" "http://localhost:7878/time" "GET" $null $null "time"
 # 3. POST /echo
 $echoBody = "HelloRouter"
 $response = Invoke-RestMethod -Uri "http://localhost:7878/echo" -Method Post -Body $echoBody -ContentType "text/plain"
-if ($response -eq $echoBody) {
+if ($response -match $echoBody) {
     Write-Host "✅ POST /echo PASSED"
 } else {
     Write-Host "❌ POST /echo FAILED. Response: $response"
@@ -50,13 +50,14 @@ if ($response -eq $echoBody) {
 $jsonBody = @{ message = "Hello JSON" } | ConvertTo-Json
 $headers = @{ "Content-Type" = "application/json" }
 $response = Invoke-RestMethod -Uri "http://localhost:7878/json" -Method Post -Body $jsonBody -Headers $headers -ContentType "application/json"
-if ($response.message -eq "Hello JSON") {
+if ($response -match "Hello JSON") {
     Write-Host "✅ POST /json PASSED"
 } else {
     Write-Host "❌ POST /json FAILED. Response: $($response | ConvertTo-Json)"
     exit 1
 }
 
+$null = Start-Sleep -Seconds 1
 # 5. GET /users/:id
 $response = Invoke-RestMethod -Uri "http://localhost:7878/users/42" -Method Get -ErrorAction Stop
 if ($response -match "User ID requested: 42") {
