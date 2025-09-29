@@ -1,0 +1,16 @@
+[package]
+name = "middleware_server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.100"
+dotenvy = "0.15.7"
+futures = "0.3.31"
+futures-timer = "3.0.3"
+futures-util = "0.3.31"
+mongodb = "3.2.5"
+serde = { version = "1.0.226", features = ["derive"] }
+serde_json = "1.0.145"
+tokio = { version = "1.47.1", features = ["full"] }
+uuid = { version = "1.18.1", features = ["v4"] }
