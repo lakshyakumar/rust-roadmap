@@ -29,8 +29,8 @@ pub async fn get(req: &str, db: &Database) -> Response {
         let body_string = &req[idx + 4..];
         if let Ok(payload) = serde_json::from_str::<GetUserRequest>(body_string) {
             let collection = db.collection::<mongodb::bson::Document>("users");
-            println!("email: {}", &payload.email);
-            // let filter = doc! { "email": &payload.email };
+            // println!("email: {}", &payload.email);
+            let filter = doc! { "email": &payload.email };
             match collection.find(filter).await {
                 Ok(mut cursor) => {
                     use futures::stream::TryStreamExt;
