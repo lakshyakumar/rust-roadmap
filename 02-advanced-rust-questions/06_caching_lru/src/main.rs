@@ -1,3 +1,4 @@
+mod cache;
 mod handlers;
 mod middleware;
 mod middlewares;

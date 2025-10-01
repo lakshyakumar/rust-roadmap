@@ -1,4 +1,6 @@
-use crate::types::Response;
+use std::{clone, sync::Arc};
+
+use crate::{cache::LRUCache, server::UserCache, types::Response};
 use mongodb::bson::doc;
 use mongodb::Database;
 use serde::{Deserialize, Serialize};
@@ -11,8 +13,8 @@ struct CreateUserRequest {
     email: String,
 }
 
-#[derive(Serialize, Deserialize)]
-struct UserResponse {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct UserResponse {
     id: String,
     name: String,
     age: u32,
@@ -24,10 +26,26 @@ struct GetUserRequest {
     email: String,
 }
 
-pub async fn get(req: &str, db: &Database) -> Response {
+pub async fn get(
+    req: &str,
+    db: &Database,
+    cache: &Arc<std::sync::Mutex<LRUCache<std::string::String, UserResponse>>>,
+) -> Response {
     if let Some(idx) = req.find("\r\n\r\n") {
         let body_string = &req[idx + 4..];
         if let Ok(payload) = serde_json::from_str::<GetUserRequest>(body_string) {
+            if let Ok(mut cache_guard) = cache.lock() {
+                if let Some(user) = cache_guard.get(&payload.email) {
+                    if let Ok(body) = serde_json::to_string(&vec![user]) {
+                        println!("cache hit!");
+                        return Response {
+                            status: 200,
+                            content_type: "application/json".into(),
+                            body,
+                        };
+                    }
+                }
+            }
             let collection = db.collection::<mongodb::bson::Document>("users");
             // println!("email: {}", &payload.email);
             let filter = doc! { "email": &payload.email };
@@ -44,12 +62,18 @@ pub async fn get(req: &str, db: &Database) -> Response {
                         let name = doc.get_str("name").unwrap_or("").to_string();
                         let age = doc.get_i32("age").unwrap_or(0) as u32;
                         let email = doc.get_str("email").unwrap_or("").to_string();
-                        users.push(UserResponse {
+                        let user = UserResponse {
                             id,
                             name,
                             age,
-                            email,
-                        });
+                            email: email.clone(),
+                        };
+
+                        if let Ok(mut cache_guard) = cache.lock() {
+                            println!("Entering in cache");
+                            cache_guard.put(email.clone(), user.clone());
+                        }
+                        users.push(user);
                     }
                     if !users.is_empty() {
                         if let Ok(body) = serde_json::to_string(&users) {
@@ -83,7 +107,11 @@ pub async fn get(req: &str, db: &Database) -> Response {
     }
 }
 
-pub async fn handle(req: &str, db: &Database) -> Response {
+pub async fn handle(
+    req: &str,
+    db: &Database,
+    cache: &Arc<std::sync::Mutex<LRUCache<std::string::String, UserResponse>>>,
+) -> Response {
     if let Some(idx) = req.find("\r\n\r\n") {
         let body_str = &req[idx + 4..];
         if let Ok(payload) = serde_json::from_str::<CreateUserRequest>(body_str) {
@@ -100,9 +128,14 @@ pub async fn handle(req: &str, db: &Database) -> Response {
                             id: oid.to_hex(),
                             name: payload.name,
                             age: payload.age,
-                            email: payload.email,
+                            email: payload.email.clone(),
                         };
                         if let Ok(body) = serde_json::to_string(&user) {
+                            if let Ok(mut cache_guard) = cache.lock() {
+                                println!("Entering in cache");
+                                cache_guard.put(payload.email, user.clone());
+                            }
+
                             return Response {
                                 status: 201,
                                 content_type: "application/json".into(),

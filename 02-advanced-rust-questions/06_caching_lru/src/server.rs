@@ -1,8 +1,10 @@
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
+use crate::cache::LRUCache;
 use crate::handlers;
+use crate::handlers::user::UserResponse;
 use crate::middleware::{self, Middleware};
 use crate::middlewares::logger::LoggerMiddleware;
 use crate::middlewares::rate_limiting::TokenBucketMiddleware;
@@ -12,6 +14,8 @@ use tokio::net::TcpListener;
 
 use crate::types::Response;
 
+pub type UserCache = LRUCache<String, UserResponse>;
+
 pub async fn run() -> anyhow::Result<()> {
     // Load environment variables from .env file
     dotenvy::dotenv().ok();
@@ -20,6 +24,7 @@ pub async fn run() -> anyhow::Result<()> {
     let mongodb_db = std::env::var("MONGODB_DB").unwrap_or_else(|_| "my_app".to_string());
     let client = Client::with_uri_str(&mongodb_uri).await?;
     let db = Arc::new(client.database(&mongodb_db));
+    let cache = Arc::new(Mutex::new(UserCache::new(100)));
 
     let listener = TcpListener::bind("0.0.0.0:7878").await?;
     println!("Listening on port 7878");
@@ -33,6 +38,7 @@ pub async fn run() -> anyhow::Result<()> {
         let (mut socket, addr) = listener.accept().await?;
         let middlewares = middlewares.clone();
         let db = db.clone();
+        let cache_clone = cache.clone();
         tokio::spawn(async move {
             let mut buf = [0; 1024];
             if let Ok(n) = socket.read(&mut buf).await {
@@ -43,12 +49,14 @@ pub async fn run() -> anyhow::Result<()> {
                 let req = String::from_utf8_lossy(&buf[..n]);
                 let middleware_ref: Vec<&dyn Middleware> =
                     middlewares.iter().map(|m| m.as_ref()).collect();
+                let cache_for_handler = cache_clone.clone();
                 let handler: Box<
                     dyn Fn(&str) -> Pin<Box<dyn Future<Output = Response> + Send>> + Send + Sync,
                 > = Box::new(move |req: &str| {
                     let req_owned = req.to_string();
                     let db = db.clone();
-                    Box::pin(async move { route_request(&req_owned, &db).await })
+                    let cache = cache_for_handler.clone();
+                    Box::pin(async move { route_request(&req_owned, &db, &cache).await })
                 });
                 let res =
                     middleware::run_chain(&req, &(addr.ip().to_string()), &middleware_ref, handler)
@@ -59,15 +67,15 @@ pub async fn run() -> anyhow::Result<()> {
     }
 }
 
-pub async fn route_request(req: &str, db: &Database) -> Response {
+pub async fn route_request(req: &str, db: &Database, cache: &Arc<Mutex<UserCache>>) -> Response {
     if req.starts_with("GET /health") {
         handlers::health::handle().await
     } else if req.starts_with("GET /hello/") {
         handlers::hello::handle(req).await
     } else if req.starts_with("POST /user") {
-        handlers::user::handle(req, db).await
+        handlers::user::handle(req, db, cache).await
     } else if req.starts_with("GET /user") {
-        handlers::user::get(req, db).await
+        handlers::user::get(req, db, cache).await
     } else {
         Response {
             status: 404,
