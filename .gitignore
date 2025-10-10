@@ -30,3 +30,6 @@ Cargo.lock
 
 # Ignore all target directories in advanced rust questions subfolders
 
+# Ignore user cache directories in advanced rust questions projects
+02-advanced-rust-questions/*/user_cache/
+
