@@ -1,0 +1,2 @@
+{"service":"proxy","action":"GET /orders","timestamp":"2025-10-17T06:59:53.864902+00:00"}
+{"service":"proxy","action":"GET /users","timestamp":"2025-10-17T07:00:08.013047300+00:00"}
