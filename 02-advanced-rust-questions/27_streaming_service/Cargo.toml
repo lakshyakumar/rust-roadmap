@@ -1,0 +1,13 @@
+[package]
+name = "streaming_service"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+tokio = { version = "1.44", features = ["full"] }
+futures = "0.3"
+bytes = "1.4"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
+tokio-tungstenite = "0.28.0"
+anyhow = "1.0.100"
